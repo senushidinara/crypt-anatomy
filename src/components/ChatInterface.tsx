@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Ghost, Send, Loader2 } from "lucide-react";
+import { Ghost, Send, Loader2, AlertCircle, Wifi } from "lucide-react";
 import { toast } from "sonner";
 import drCadaverson from "@/assets/dr-cadaverson.png";
+import { isApiConfigured } from "@/lib/api-config";
+import { getDemoResponse } from "@/lib/demo-responses";
 
 interface Message {
   role: 'user' | 'assistant';
