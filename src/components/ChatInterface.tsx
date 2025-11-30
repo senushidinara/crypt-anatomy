@@ -44,86 +44,14 @@ const ChatInterface = () => {
     setInput("");
     setIsLoading(true);
 
-    let assistantContent = "";
-    
     try {
-      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-      
-      const response = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          toast.error("Too many spirits summoned at once! Please wait a moment...");
-          setIsLoading(false);
-          return;
-        }
-        if (response.status === 402) {
-          toast.error("The mystical energies are depleted. Please contact the crypt keeper.");
-          setIsLoading(false);
-          return;
-        }
-        throw new Error("Failed to contact Dr. Cadaverson");
+      if (apiAvailable) {
+        // Use real AI API
+        await handleAiResponse(userMessage);
+      } else {
+        // Use demo responses
+        await handleDemoResponse(userMessage);
       }
-
-      if (!response.body) throw new Error("No response from the spirit realm");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let streamDone = false;
-
-      // Add initial assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage?.role === 'assistant') {
-                  lastMessage.content = assistantContent;
-                }
-                return newMessages;
-              });
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-
       setIsLoading(false);
     } catch (error) {
       console.error("Chat error:", error);
@@ -131,6 +59,92 @@ const ChatInterface = () => {
       setMessages(prev => prev.filter(m => m.role !== 'assistant' || m.content !== ''));
       setIsLoading(false);
     }
+  };
+
+  const handleAiResponse = async (userMessage: Message) => {
+    let assistantContent = "";
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
+    const response = await fetch(CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ messages: [...messages, userMessage] }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        toast.error("Too many spirits summoned at once! Please wait a moment...");
+        return;
+      }
+      if (response.status === 402) {
+        toast.error("The mystical energies are depleted. Please contact the crypt keeper.");
+        return;
+      }
+      throw new Error("Failed to contact Dr. Cadaverson");
+    }
+
+    if (!response.body) throw new Error("No response from the spirit realm");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let textBuffer = "";
+    let streamDone = false;
+
+    // Add initial assistant message
+    setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+    while (!streamDone) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      textBuffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex: number;
+      while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+        let line = textBuffer.slice(0, newlineIndex);
+        textBuffer = textBuffer.slice(newlineIndex + 1);
+
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (line.startsWith(":") || line.trim() === "") continue;
+        if (!line.startsWith("data: ")) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") {
+          streamDone = true;
+          break;
+        }
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            assistantContent += content;
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const lastMessage = newMessages[newMessages.length - 1];
+              if (lastMessage?.role === 'assistant') {
+                lastMessage.content = assistantContent;
+              }
+              return newMessages;
+            });
+          }
+        } catch {
+          textBuffer = line + "\n" + textBuffer;
+          break;
+        }
+      }
+    }
+  };
+
+  const handleDemoResponse = async (userMessage: Message) => {
+    // Simulate slight delay for realism
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const assistantContent = getDemoResponse(userMessage.content);
+    setMessages(prev => [...prev, { role: 'assistant', content: assistantContent }]);
   };
 
   return (
