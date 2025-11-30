@@ -40,14 +40,15 @@ const ChatInterface = () => {
       content: input
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput("");
     setIsLoading(true);
 
     try {
       if (apiAvailable) {
         // Use real AI API
-        await handleAiResponse(userMessage);
+        await handleAiResponse(updatedMessages);
       } else {
         // Use demo responses
         await handleDemoResponse(userMessage);
@@ -61,7 +62,7 @@ const ChatInterface = () => {
     }
   };
 
-  const handleAiResponse = async (userMessage: Message) => {
+  const handleAiResponse = async (updatedMessages: Message[]) => {
     let assistantContent = "";
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -71,7 +72,7 @@ const ChatInterface = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: [...messages, userMessage] }),
+      body: JSON.stringify({ messages: updatedMessages }),
     });
 
     if (!response.ok) {
