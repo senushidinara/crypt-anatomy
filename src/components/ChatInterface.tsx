@@ -41,27 +41,91 @@ const ChatInterface = () => {
     setInput("");
     setIsLoading(true);
 
+    let assistantContent = "";
+    
     try {
-      // TODO: Integrate with Lovable AI
-      // For now, simulating a spooky response
-      setTimeout(() => {
-        const responses = [
-          "*The ghost materializes with a knowing smile...* \n\nAh, an excellent question about the brachial plexus! This network of nerves, dear student, emerges from the spinal cord like ethereal tendrils... Let me explain its haunting complexity...",
-          "*Skeletal fingers point to an anatomical chart...* \n\nThe cardiovascular system, much like the rivers of the underworld, flows through channels both great and small. The heart, that cursed organ that ceased beating in my chest so long ago...",
-          "*Cobwebs shimmer as ancient knowledge awakens...* \n\nYour inquiry touches upon the very essence of what makes us mortal! The nervous system—ah, what a marvel of biological architecture...",
-          "*A cold wind blows through the laboratory...* \n\nIntriguing question, mortal! In my decades of study, both in life and in death, I've found that understanding begins with observation..."
-        ];
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+      
+      const response = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          toast.error("Too many spirits summoned at once! Please wait a moment...");
+          setIsLoading(false);
+          return;
+        }
+        if (response.status === 402) {
+          toast.error("The mystical energies are depleted. Please contact the crypt keeper.");
+          setIsLoading(false);
+          return;
+        }
+        throw new Error("Failed to contact Dr. Cadaverson");
+      }
+
+      if (!response.body) throw new Error("No response from the spirit realm");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let streamDone = false;
+
+      // Add initial assistant message
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
         
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: randomResponse
-        }]);
-        setIsLoading(false);
-      }, 2000);
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") {
+            streamDone = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMessage = newMessages[newMessages.length - 1];
+                if (lastMessage?.role === 'assistant') {
+                  lastMessage.content = assistantContent;
+                }
+                return newMessages;
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      setIsLoading(false);
     } catch (error) {
+      console.error("Chat error:", error);
       toast.error("The spirits are restless... Try again, mortal.");
+      setMessages(prev => prev.filter(m => m.role !== 'assistant' || m.content !== ''));
       setIsLoading(false);
     }
   };
