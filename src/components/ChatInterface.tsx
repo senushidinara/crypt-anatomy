@@ -23,6 +23,7 @@ const ChatInterface = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [apiAvailable] = useState(isApiConfigured());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
