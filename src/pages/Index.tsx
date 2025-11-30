@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Skull, FlaskConical, MessageSquare, Brain, BookOpen } from "lucide-react";
+import { Skull, FlaskConical, MessageSquare, Brain, BookOpen, Microscope, Syringe, ScrollText } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import ChatInterface from "@/components/ChatInterface";
 import AnatomyViewer from "@/components/AnatomyViewer";
 import QuizSection from "@/components/QuizSection";
+import PathologyLab from "@/components/PathologyLab";
+import SurgerySuite from "@/components/SurgerySuite";
+import MedicalHistory from "@/components/MedicalHistory";
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState<'home' | 'chat' | 'anatomy' | 'quiz'>('home');
+  const [activeSection, setActiveSection] = useState<'home' | 'chat' | 'anatomy' | 'quiz' | 'pathology' | 'surgery' | 'history'>('home');
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -31,7 +34,7 @@ const Index = () => {
                 Cadaver's Crypt
               </h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -68,6 +71,33 @@ const Index = () => {
                 <BookOpen className="w-4 h-4 mr-2" />
                 Trials
               </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setActiveSection('pathology')}
+                className={activeSection === 'pathology' ? 'text-toxic-green' : ''}
+              >
+                <Microscope className="w-4 h-4 mr-2" />
+                Pathology
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setActiveSection('surgery')}
+                className={activeSection === 'surgery' ? 'text-toxic-green' : ''}
+              >
+                <Syringe className="w-4 h-4 mr-2" />
+                Surgery
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setActiveSection('history')}
+                className={activeSection === 'history' ? 'text-toxic-green' : ''}
+              >
+                <ScrollText className="w-4 h-4 mr-2" />
+                History
+              </Button>
             </div>
           </div>
         </div>
@@ -79,6 +109,9 @@ const Index = () => {
         {activeSection === 'chat' && <ChatInterface />}
         {activeSection === 'anatomy' && <AnatomyViewer />}
         {activeSection === 'quiz' && <QuizSection />}
+        {activeSection === 'pathology' && <PathologyLab />}
+        {activeSection === 'surgery' && <SurgerySuite />}
+        {activeSection === 'history' && <MedicalHistory />}
       </main>
 
       {/* Footer */}

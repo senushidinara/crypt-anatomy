@@ -27,14 +27,14 @@ export const getDemoResponse = (userMessage: string): string => {
   
   // Match keywords in user message to appropriate demo response
   const keywords: [string[], string][] = [
-    ([['heart', 'cardiac', 'pump', 'chambers']], 'heart'),
-    ([['brain', 'mind', 'consciousness', 'neural', 'neuron']], 'brain'),
-    ([['nervous', 'nerve', 'electrical', 'impulse']], 'nervous'),
-    ([['bone', 'skeleton', 'skeletal', 'calcium', 'femur']], 'bones'),
-    ([['blood', 'circulatory', 'vessel', 'oxygen']], 'blood'),
-    ([['lung', 'respiratory', 'breathing', 'breath']], 'lungs'),
-    ([['escape', 'leave', 'exit', 'freedom', 'get out']], 'escape'),
-    ([['anatomy', 'body', 'human', 'organ', 'system']], 'anatomy'),
+    [['heart', 'cardiac', 'pump', 'chambers'], 'heart'],
+    [['brain', 'mind', 'consciousness', 'neural', 'neuron'], 'brain'],
+    [['nervous', 'nerve', 'electrical', 'impulse'], 'nervous'],
+    [['bone', 'skeleton', 'skeletal', 'calcium', 'femur'], 'bones'],
+    [['blood', 'circulatory', 'vessel', 'oxygen'], 'blood'],
+    [['lung', 'respiratory', 'breathing', 'breath'], 'lungs'],
+    [['escape', 'leave', 'exit', 'freedom', 'get out'], 'escape'],
+    [['anatomy', 'body', 'human', 'organ', 'system'], 'anatomy'],
   ];
   
   for (const [words, responseKey] of keywords) {
