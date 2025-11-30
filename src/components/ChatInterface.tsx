@@ -152,19 +152,40 @@ const ChatInterface = () => {
       <Card className="bg-card/50 backdrop-blur-sm border-toxic-green/30 shadow-[0_0_30px_rgba(42,157,143,0.2)] animate-fade-in">
         {/* Header */}
         <div className="border-b border-border/50 p-6">
-          <div className="flex items-center gap-4">
-            <img 
-              src={drCadaverson} 
-              alt="Dr. Cadaverson" 
-              className="w-16 h-16 object-contain animate-ghost-float glow-pulse"
-            />
-            <div>
-              <h2 className="text-2xl font-gothic font-bold text-toxic-green text-toxic">
-                Dr. Cadaverson's Chamber
-              </h2>
-              <p className="text-sm text-muted-foreground font-serif">
-                Ask the ghostly professor anything about anatomy...
-              </p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4 flex-1">
+              <img
+                src={drCadaverson}
+                alt="Dr. Cadaverson"
+                className="w-16 h-16 object-contain animate-ghost-float glow-pulse"
+              />
+              <div>
+                <h2 className="text-2xl font-gothic font-bold text-toxic-green text-toxic">
+                  Dr. Cadaverson's Chamber
+                </h2>
+                <p className="text-sm text-muted-foreground font-serif">
+                  Ask the ghostly professor anything about anatomy...
+                </p>
+              </div>
+            </div>
+
+            {/* API Status Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-serif ${
+              apiAvailable
+                ? 'bg-toxic-green/10 text-toxic-green border border-toxic-green/30'
+                : 'bg-blood-red/10 text-blood-red border border-blood-red/30'
+            }`}>
+              {apiAvailable ? (
+                <>
+                  <Wifi className="w-3 h-3" />
+                  <span>AI Powered</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Demo Mode</span>
+                </>
+              )}
             </div>
           </div>
         </div>
