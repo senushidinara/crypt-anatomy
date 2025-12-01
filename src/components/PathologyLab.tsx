@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Microscope, Skull, Heart, Droplet, Bone, Bug, Zap, Moon, Flame, Shield } from "lucide-react";
 import { toast } from "sonner";
+import pathologyImage from "@/assets/pathology-necrosis.jpg";
 
 const activities = [
   { id: "necrosis", title: "Necrosis Nightmare", icon: Skull, description: "Identify different types of cell death in cursed tissues" },
@@ -21,6 +22,8 @@ const activities = [
 const PathologyLab = () => {
   const [activeActivity, setActiveActivity] = useState(activities[0].id);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const [analysisStage, setAnalysisStage] = useState<"specimen" | "microscope" | "diagnosis">("specimen");
+  const [findings, setFindings] = useState<string[]>([]);
 
   const handleActivityComplete = (activityId: string) => {
     if (!completedActivities.includes(activityId)) {
@@ -83,44 +86,142 @@ const PathologyLab = () => {
 
                 {/* Activity Content */}
                 <div className="space-y-4">
+                  {/* Stage Indicator */}
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    {(["specimen", "microscope", "diagnosis"] as const).map((stage, idx) => (
+                      <div key={stage} className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                          analysisStage === stage 
+                            ? "border-toxic-green bg-toxic-green/20 text-toxic-green" 
+                            : "border-border text-muted-foreground"
+                        }`}>
+                          {idx + 1}
+                        </div>
+                        <span className="text-sm font-gothic capitalize">{stage}</span>
+                        {idx < 2 && <span className="text-muted-foreground">→</span>}
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="bg-background/40 rounded-lg p-4 border border-border/30">
-                    <h4 className="font-gothic text-lg mb-3 text-foreground">Case Specimen</h4>
-                    <div className="aspect-video bg-coffin-black/80 rounded-lg flex items-center justify-center border border-toxic-green/20 mb-4">
-                      <activity.icon className="w-24 h-24 text-toxic-green/30 animate-glow-pulse" />
+                    <h4 className="font-gothic text-lg mb-3 text-foreground">
+                      {analysisStage === "specimen" && "Specimen Collection"}
+                      {analysisStage === "microscope" && "Microscopic Analysis"}
+                      {analysisStage === "diagnosis" && "Final Diagnosis"}
+                    </h4>
+                    
+                    <div className="aspect-video bg-coffin-black/80 rounded-lg overflow-hidden border border-toxic-green/20 mb-4 relative group">
+                      <img 
+                        src={pathologyImage} 
+                        alt="Pathology specimen"
+                        className={`w-full h-full object-cover transition-all duration-500 ${
+                          analysisStage === "microscope" ? "scale-150 brightness-110" : ""
+                        }`}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-coffin-black/80 to-transparent" />
+                      {analysisStage === "microscope" && (
+                        <div className="absolute inset-0 pointer-events-none">
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-toxic-green rounded-full animate-glow-pulse" />
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 border border-toxic-green/50 rounded-full animate-ping" />
+                        </div>
+                      )}
                     </div>
+
+                    {findings.length > 0 && (
+                      <div className="bg-coffin-black/60 border border-blood-red/30 rounded-lg p-3 mb-4 animate-fade-in">
+                        <p className="text-blood-red font-gothic mb-2">Findings Detected:</p>
+                        <ul className="space-y-1">
+                          {findings.map((finding, idx) => (
+                            <li key={idx} className="text-sm text-muted-foreground font-serif flex items-start gap-2">
+                              <span className="text-toxic-green">•</span>
+                              {finding}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <p className="text-sm text-muted-foreground font-serif mb-4">
-                      Examine the pathological specimen and identify the disease process. 
-                      Click on different areas to investigate cellular changes and tissue damage.
+                      {analysisStage === "specimen" && "Collect and prepare the tissue specimen for examination. Click areas of interest to mark them."}
+                      {analysisStage === "microscope" && "Examine cellular structures under high magnification. Identify pathological changes."}
+                      {analysisStage === "diagnosis" && "Based on your findings, formulate a diagnosis and submit your conclusion."}
                     </p>
+
                     <div className="grid grid-cols-2 gap-3">
-                      <Button 
-                        variant="haunted" 
-                        className="w-full"
-                        onClick={() => toast.info("🔬 Analyzing specimen...", { description: "Cellular structures reveal their secrets..." })}
-                      >
-                        Analyze Tissue
-                      </Button>
-                      <Button 
-                        variant="haunted" 
-                        className="w-full"
-                        onClick={() => toast.info("🧪 Running tests...", { description: "The microscope reveals hidden truths..." })}
-                      >
-                        Run Tests
-                      </Button>
-                      <Button 
-                        variant="haunted" 
-                        className="w-full"
-                        onClick={() => toast.info("📊 Comparing samples...", { description: "Normal vs abnormal tissue patterns emerge..." })}
-                      >
-                        Compare Samples
-                      </Button>
-                      <Button 
-                        variant="crypt" 
-                        className="w-full"
-                        onClick={() => handleActivityComplete(activity.id)}
-                      >
-                        Submit Diagnosis
-                      </Button>
+                      {analysisStage === "specimen" && (
+                        <>
+                          <Button 
+                            variant="haunted" 
+                            className="w-full"
+                            onClick={() => {
+                              setFindings([...findings, "Abnormal cell morphology detected"]);
+                              toast.info("🔬 Specimen marked", { description: "Suspicious area identified..." });
+                            }}
+                          >
+                            Mark Area
+                          </Button>
+                          <Button 
+                            variant="haunted" 
+                            className="w-full"
+                            onClick={() => {
+                              setAnalysisStage("microscope");
+                              toast.success("🧪 Moving to microscope", { description: "Preparing high-power analysis..." });
+                            }}
+                          >
+                            To Microscope
+                          </Button>
+                        </>
+                      )}
+                      {analysisStage === "microscope" && (
+                        <>
+                          <Button 
+                            variant="haunted" 
+                            className="w-full"
+                            onClick={() => {
+                              setFindings([...findings, "Necrotic tissue identified", "Inflammatory infiltrate present"]);
+                              toast.info("🔍 Scanning cells...", { description: "Pathological changes revealed..." });
+                            }}
+                          >
+                            Scan Cells
+                          </Button>
+                          <Button 
+                            variant="haunted" 
+                            className="w-full"
+                            onClick={() => {
+                              setAnalysisStage("diagnosis");
+                              toast.success("📊 Analysis complete", { description: "Ready for diagnosis..." });
+                            }}
+                          >
+                            To Diagnosis
+                          </Button>
+                        </>
+                      )}
+                      {analysisStage === "diagnosis" && (
+                        <>
+                          <Button 
+                            variant="haunted" 
+                            className="w-full"
+                            onClick={() => {
+                              setAnalysisStage("specimen");
+                              setFindings([]);
+                              toast.info("🔄 Restarting analysis");
+                            }}
+                          >
+                            Start Over
+                          </Button>
+                          <Button 
+                            variant="crypt" 
+                            className="w-full"
+                            onClick={() => {
+                              handleActivityComplete(activity.id);
+                              setAnalysisStage("specimen");
+                              setFindings([]);
+                            }}
+                          >
+                            Submit Diagnosis
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
 
