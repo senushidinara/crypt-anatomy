@@ -1,194 +1,288 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Heart, Skull, Activity, Eye, Zap } from "lucide-react";
-import skeletonPointer from "@/assets/skeleton-pointer.png";
+import { Button } from "@/components/ui/button";
+import { Brain, Heart, Bone, Activity, Eye, Skull, Droplet, Zap, Wind, Target } from "lucide-react";
+import { toast } from "sonner";
+import skeletonSystem from "@/assets/skeleton-system.jpg";
+import muscleSystem from "@/assets/muscle-system.jpg";
+import organSystem from "@/assets/organ-system.jpg";
+import nervousSystem from "@/assets/nervous-system.jpg";
+import circulatorySystem from "@/assets/circulatory-system.jpg";
 
-interface AnatomyPart {
-  id: string;
-  name: string;
-  description: string;
-  icon: any;
-  spookyFact: string;
-}
-
-const anatomyParts: AnatomyPart[] = [
-  {
-    id: 'brain',
-    name: 'The Haunted Brain',
-    description: 'The cerebrum, with its ghostly folds and mysterious neural pathways, controls consciousness and cognition. In Dr. Cadaverson\'s time, the brain was believed to house the soul...',
-    icon: Brain,
-    spookyFact: '*whispers* Did you know the brain can survive 6 minutes after the heart stops? A liminal space between life and death...'
+const systems = [
+  { 
+    id: "skeletal", 
+    name: "Skeletal System", 
+    icon: Bone, 
+    description: "206 bones forming the framework",
+    image: skeletonSystem,
+    parts: ["Skull", "Ribcage", "Spine", "Pelvis", "Femur", "Humerus"]
   },
-  {
-    id: 'heart',
-    name: 'The Cursed Heart',
-    description: 'This tireless organ, beating roughly 100,000 times per day in the living, creates a rhythm that echoes through eternity. Four chambers pump the crimson rivers of life...',
-    icon: Heart,
-    spookyFact: '*chains rattle* The heart has its own electrical system and can continue beating even outside the body. Quite unsettling, isn\'t it?'
+  { 
+    id: "muscular", 
+    name: "Muscular System", 
+    icon: Activity, 
+    description: "Over 600 muscles for movement",
+    image: muscleSystem,
+    parts: ["Biceps", "Triceps", "Quadriceps", "Hamstrings", "Deltoids", "Pectorals"]
   },
-  {
-    id: 'skeleton',
-    name: 'The Bone Framework',
-    description: 'The 206 bones of the adult skeleton form the architecture of the mortal form. These calcium structures endure long after flesh has returned to dust...',
-    icon: Skull,
-    spookyFact: '*eerie creaking* Bones are constantly remodeling themselves. In a sense, we all possess our very own haunted framework...'
+  { 
+    id: "nervous", 
+    name: "Nervous System", 
+    icon: Brain, 
+    description: "Brain, spinal cord, and neural networks",
+    image: nervousSystem,
+    parts: ["Brain", "Spinal Cord", "Neurons", "Synapses", "Nerves", "Ganglia"]
   },
-  {
-    id: 'nerves',
-    name: 'The Electric Web',
-    description: 'The nervous system sends electrical impulses at speeds up to 270 mph, connecting brain to body in a supernatural network of sensation and control...',
-    icon: Zap,
-    spookyFact: '*ghostly spark* These electrical signals continue briefly after death, causing the infamous post-mortem twitches that terrified my colleagues...'
+  { 
+    id: "circulatory", 
+    name: "Circulatory System", 
+    icon: Heart, 
+    description: "Heart, blood vessels, and blood flow",
+    image: circulatorySystem,
+    parts: ["Heart", "Arteries", "Veins", "Capillaries", "Blood", "Plasma"]
+  },
+  { 
+    id: "respiratory", 
+    name: "Respiratory System", 
+    icon: Wind, 
+    description: "Lungs and airways for gas exchange",
+    image: organSystem,
+    parts: ["Lungs", "Trachea", "Bronchi", "Alveoli", "Diaphragm", "Larynx"]
+  },
+  { 
+    id: "digestive", 
+    name: "Digestive System", 
+    icon: Activity, 
+    description: "Processing food and nutrients",
+    image: organSystem,
+    parts: ["Stomach", "Intestines", "Liver", "Pancreas", "Esophagus", "Colon"]
+  },
+  { 
+    id: "urinary", 
+    name: "Urinary System", 
+    icon: Droplet, 
+    description: "Waste filtration and removal",
+    image: organSystem,
+    parts: ["Kidneys", "Bladder", "Ureters", "Urethra", "Nephrons", "Renal Pelvis"]
+  },
+  { 
+    id: "reproductive", 
+    name: "Reproductive System", 
+    icon: Heart, 
+    description: "Organs of reproduction",
+    image: organSystem,
+    parts: ["Ovaries", "Testes", "Uterus", "Prostate", "Fallopian Tubes", "Vas Deferens"]
+  },
+  { 
+    id: "lymphatic", 
+    name: "Lymphatic System", 
+    icon: Zap, 
+    description: "Immune defense and fluid balance",
+    image: circulatorySystem,
+    parts: ["Lymph Nodes", "Spleen", "Thymus", "Tonsils", "Lymph Vessels", "Bone Marrow"]
+  },
+  { 
+    id: "endocrine", 
+    name: "Endocrine System", 
+    icon: Target, 
+    description: "Hormonal regulation network",
+    image: nervousSystem,
+    parts: ["Pituitary", "Thyroid", "Adrenal", "Pancreas", "Pineal", "Hypothalamus"]
   }
 ];
 
 const AnatomyViewer = () => {
-  const [selectedPart, setSelectedPart] = useState<AnatomyPart>(anatomyParts[0]);
-  const [isHovering, setIsHovering] = useState(false);
+  const [activeSystem, setActiveSystem] = useState(systems[0].id);
+  const [selectedPart, setSelectedPart] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"normal" | "xray" | "layers">("normal");
+
+  const currentSystem = systems.find(s => s.id === activeSystem);
+
+  if (!currentSystem) return null;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-gothic font-bold text-toxic-green text-toxic mb-3">
-            The Anatomy Collection
-          </h2>
-          <p className="text-muted-foreground font-serif text-lg">
-            *Dusty anatomical specimens glow with eerie light...*
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Skull className="w-12 h-12 text-toxic-green animate-glow-pulse" />
+            <h1 className="text-4xl font-gothic font-bold text-toxic-green">
+              Anatomical Collection
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-lg font-serif">
+            Explore the haunted anatomy specimens in Dr. Cadaverson's laboratory
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* 3D Viewer Area */}
-          <Card className="p-8 bg-card/50 backdrop-blur-sm border-toxic-green/30 shadow-[0_0_30px_rgba(42,157,143,0.2)] animate-scale-in">
-            <div className="aspect-square bg-muted/30 rounded-lg border border-border/50 flex items-center justify-center relative overflow-hidden group">
-              {/* Placeholder for 3D Model */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blood-red/5 via-transparent to-toxic-green/5 animate-flicker" />
-              
-              <div 
-                className="relative z-10 transition-transform duration-700 ease-in-out"
-                style={{
-                  transform: isHovering ? 'scale(1.1) rotate(5deg)' : 'scale(1) rotate(0deg)'
-                }}
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => setIsHovering(false)}
+        {/* System Tabs */}
+        <Tabs value={activeSystem} onValueChange={setActiveSystem} className="w-full">
+          <TabsList className="grid grid-cols-5 lg:grid-cols-10 gap-2 h-auto bg-coffin-black/40 p-2">
+            {systems.map((system) => (
+              <TabsTrigger 
+                key={system.id} 
+                value={system.id}
+                className="data-[state=active]:bg-toxic-green/20 data-[state=active]:text-toxic-green"
               >
-                <img 
-                  src={skeletonPointer}
-                  alt="Anatomical Skeleton"
-                  className="w-full max-w-md mx-auto glow-pulse cursor-pointer"
-                />
-              </div>
+                <system.icon className="w-4 h-4" />
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-              {/* Floating Particles Effect */}
-              <div className="absolute inset-0 pointer-events-none">
-                {[...Array(20)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-1 h-1 bg-toxic-green rounded-full animate-ghost-float opacity-30"
-                    style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 3}s`,
-                      animationDuration: `${3 + Math.random() * 4}s`
+          {systems.map((system) => (
+            <TabsContent key={system.id} value={system.id} className="mt-6">
+              <Card className="bg-coffin-black/60 border-toxic-green/30 p-6 animate-fade-in">
+                <div className="flex items-start gap-4 mb-6">
+                  <system.icon className="w-8 h-8 text-blood-red animate-heartbeat" />
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-gothic font-bold text-toxic-green mb-2">
+                      {system.name}
+                    </h3>
+                    <p className="text-muted-foreground font-serif">
+                      {system.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* View Mode Selector */}
+                <div className="flex gap-2 mb-4">
+                  <Button 
+                    size="sm"
+                    variant={viewMode === "normal" ? "haunted" : "outline"}
+                    onClick={() => {
+                      setViewMode("normal");
+                      toast.info("👁️ Normal view activated");
                     }}
-                  />
-                ))}
-              </div>
-
-              <div className="absolute bottom-4 left-4 right-4 text-center">
-                <p className="text-xs text-muted-foreground font-serif italic">
-                  *Click and hover to explore the specimen...*
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-center gap-2">
-              <Button variant="crypt" size="sm">
-                <Activity className="w-4 h-4 mr-2" />
-                Rotate View
-              </Button>
-              <Button variant="crypt" size="sm">
-                <Eye className="w-4 h-4 mr-2" />
-                Layer View
-              </Button>
-              <Button variant="crypt" size="sm">
-                <Zap className="w-4 h-4 mr-2" />
-                Animate
-              </Button>
-            </div>
-          </Card>
-
-          {/* Information Panel */}
-          <div className="space-y-6">
-            <Tabs defaultValue={selectedPart.id} className="w-full">
-              <TabsList className="grid grid-cols-2 lg:grid-cols-4 gap-2 bg-muted/30 p-2">
-                {anatomyParts.map((part) => (
-                  <TabsTrigger
-                    key={part.id}
-                    value={part.id}
-                    onClick={() => setSelectedPart(part)}
-                    className="data-[state=active]:bg-toxic-green data-[state=active]:text-coffin-black transition-all duration-300"
                   >
-                    <part.icon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">{part.name.split(' ')[1]}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+                    Normal
+                  </Button>
+                  <Button 
+                    size="sm"
+                    variant={viewMode === "xray" ? "haunted" : "outline"}
+                    onClick={() => {
+                      setViewMode("xray");
+                      toast.info("💀 X-Ray vision enabled...", { description: "Peering through the flesh..." });
+                    }}
+                  >
+                    X-Ray
+                  </Button>
+                  <Button 
+                    size="sm"
+                    variant={viewMode === "layers" ? "haunted" : "outline"}
+                    onClick={() => {
+                      setViewMode("layers");
+                      toast.info("🧬 Layer view activated...", { description: "Dissecting layer by layer..." });
+                    }}
+                  >
+                    Layers
+                  </Button>
+                </div>
 
-              {anatomyParts.map((part) => (
-                <TabsContent key={part.id} value={part.id} className="animate-fade-in">
-                  <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
-                    <div className="flex items-start gap-4 mb-4">
-                      <part.icon className="w-8 h-8 text-toxic-green animate-glow-pulse flex-shrink-0" />
-                      <div>
-                        <h3 className="text-2xl font-gothic font-bold text-foreground mb-2">
-                          {part.name}
-                        </h3>
-                        <p className="text-muted-foreground font-serif leading-relaxed">
-                          {part.description}
+                {/* Interactive Anatomical View */}
+                <div className="bg-background/40 rounded-lg p-4 border border-border/30 mb-4">
+                  <div className="aspect-video bg-coffin-black/80 rounded-lg overflow-hidden relative group border border-toxic-green/20">
+                    <img 
+                      src={system.image} 
+                      alt={system.name}
+                      className={`w-full h-full object-cover transition-all duration-500 ${
+                        viewMode === "xray" ? "grayscale invert opacity-80" : ""
+                      } ${
+                        viewMode === "layers" ? "blur-sm hover:blur-none" : ""
+                      }`}
+                    />
+                    {viewMode === "xray" && (
+                      <div className="absolute inset-0 bg-toxic-green/10 mix-blend-screen animate-glow-pulse" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-coffin-black/80 to-transparent" />
+                    {selectedPart && (
+                      <div className="absolute bottom-4 left-4 right-4 bg-coffin-black/90 border border-toxic-green/50 p-3 rounded-lg animate-fade-in">
+                        <p className="text-toxic-green font-gothic text-lg">Selected: {selectedPart}</p>
+                        <p className="text-muted-foreground text-sm font-serif mt-1">
+                          Examining anatomical structure in detail...
                         </p>
                       </div>
-                    </div>
+                    )}
+                  </div>
+                </div>
 
-                    <div className="mt-6 p-4 bg-blood-red/10 border border-blood-red/20 rounded-lg">
-                      <p className="text-sm text-foreground font-serif italic leading-relaxed">
-                        {part.spookyFact}
-                      </p>
-                    </div>
-
-                    <div className="mt-6 flex gap-2">
-                      <Button variant="ghostly" size="sm" className="flex-1">
-                        <Brain className="w-4 h-4 mr-2" />
-                        Learn More
+                {/* Clickable Body Parts */}
+                <div className="bg-background/40 rounded-lg p-4 border border-border/30 mb-4">
+                  <h4 className="font-gothic text-lg mb-3 text-foreground">Select Body Part</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {system.parts.map((part) => (
+                      <Button
+                        key={part}
+                        size="sm"
+                        variant={selectedPart === part ? "haunted" : "outline"}
+                        onClick={() => {
+                          setSelectedPart(part);
+                          toast.success(`🔬 ${part} selected`, { 
+                            description: `Analyzing ${part.toLowerCase()} structure...` 
+                          });
+                        }}
+                        className="text-xs"
+                      >
+                        {part}
                       </Button>
-                      <Button variant="crypt" size="sm" className="flex-1">
-                        <Activity className="w-4 h-4 mr-2" />
-                        Test Knowledge
-                      </Button>
-                    </div>
-                  </Card>
-                </TabsContent>
-              ))}
-            </Tabs>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Additional Info Card */}
-            <Card className="p-6 bg-card/30 backdrop-blur-sm border-blood-red/20 animate-fade-in">
-              <h4 className="font-gothic font-bold text-lg text-blood-red mb-3 flex items-center gap-2">
-                <Skull className="w-5 h-5" />
-                Dr. Cadaverson's Notes
-              </h4>
-              <p className="text-sm text-muted-foreground font-serif italic leading-relaxed">
-                "These anatomical specimens have been preserved since my mortal days. 
-                Each structure tells a story of biological marvel and medical mystery. 
-                Click on different regions to reveal their secrets... 
-                *the specimens seem to pulse with an otherworldly energy*"
-              </p>
-            </Card>
-          </div>
-        </div>
+                {/* Interactive Controls */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant="haunted" 
+                    className="w-full"
+                    onClick={() => {
+                      toast.info("🦴 Rotating 3D model...", { description: "Examining from all angles..." });
+                      setTimeout(() => {
+                        toast.success("✨ Rotation complete!");
+                      }, 1500);
+                    }}
+                  >
+                    Rotate 360°
+                  </Button>
+                  <Button 
+                    variant="haunted" 
+                    className="w-full"
+                    onClick={() => {
+                      toast.info("🔍 Magnifying...", { description: "Revealing microscopic details..." });
+                      setTimeout(() => {
+                        toast.success("🔬 Cellular level reached!");
+                      }, 1500);
+                    }}
+                  >
+                    Zoom In
+                  </Button>
+                  <Button 
+                    variant="haunted" 
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedPart(null);
+                      toast.info("🔄 Resetting view...");
+                    }}
+                  >
+                    Reset View
+                  </Button>
+                  <Button 
+                    variant="crypt" 
+                    className="w-full"
+                    onClick={() => {
+                      toast.success("📚 Knowledge absorbed!", { 
+                        description: `${system.name} mastered! Dr. Cadaverson is impressed...` 
+                      });
+                    }}
+                  >
+                    Study Complete
+                  </Button>
+                </div>
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
     </div>
   );
