@@ -84,6 +84,14 @@ const ChatInterface = () => {
         toast.error("The mystical energies are depleted. Please contact the crypt keeper.");
         return;
       }
+      if (response.status === 503) {
+        // API key not configured, fall back to demo response
+        const userMessage = updatedMessages[updatedMessages.length - 1];
+        if (userMessage?.role === 'user') {
+          await handleDemoResponse(userMessage);
+        }
+        return;
+      }
       throw new Error("Failed to contact Dr. Cadaverson");
     }
 
