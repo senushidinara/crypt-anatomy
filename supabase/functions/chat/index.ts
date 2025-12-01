@@ -11,7 +11,13 @@ serve(async (req) => {
   try {
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "API key not configured" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const systemPrompt = `You are Dr. Cadaverson, a ghostly anatomy professor who died in 1897 but remains passionate about teaching medicine. 
 
